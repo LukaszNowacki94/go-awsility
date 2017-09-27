@@ -22,7 +22,7 @@ func convertAttributeValue(attr *dynamodbstreamsevt.AttributeValue) *dynamodb.At
 	switch {
 	case attr.B != nil:
 		return &dynamodb.AttributeValue{B: attr.B}
-	case attr.BOOL:
+	case attr.BOOL == true || attr.BOOL == false:
 		return &dynamodb.AttributeValue{BOOL: &attr.BOOL}
 	case attr.BS != nil:
 		return &dynamodb.AttributeValue{BS: attr.BS}
