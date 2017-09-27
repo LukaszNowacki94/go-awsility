@@ -1,13 +1,13 @@
-package dynamodb
+package main
 
 import (
 	"github.com/eawsy/aws-lambda-go-event/service/lambda/runtime/event/dynamodbstreamsevt"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/guregu/dynamo"
 )
 
-func UnmarshalEvent(event map[string]*dynamodbstreamsevt.AttributeValue, item interface{}) {
-	dynamodbattribute.UnmarshalMap(convert(event), item)
+func UnmarshalEvent(event map[string]*dynamodbstreamsevt.AttributeValue, item interface{}) error {
+	return dynamo.UnmarshalItem(convert(event), item)
 }
 
 func convert(attrs map[string]*dynamodbstreamsevt.AttributeValue) map[string]*dynamodb.AttributeValue {
@@ -19,22 +19,36 @@ func convert(attrs map[string]*dynamodbstreamsevt.AttributeValue) map[string]*dy
 }
 
 func convertAttributeValue(attr *dynamodbstreamsevt.AttributeValue) *dynamodb.AttributeValue {
-	return &dynamodb.AttributeValue{B: attr.B,
-		BOOL: &attr.BOOL,
-		BS: attr.BS,
-		L: convertAttributeValueList(attr.L),
-		M: convertAttributeValueMap(attr.M),
-		N: &attr.N,
-		NS: convertToStringPointers(attr.NS),
-		NULL: &attr.NULL,
-		S: &attr.S,
-		SS: convertToStringPointers(attr.SS)}
+	switch {
+	case attr.B != nil:
+		return &dynamodb.AttributeValue{B: attr.B}
+	case attr.BOOL:
+		return &dynamodb.AttributeValue{BOOL: &attr.BOOL}
+	case attr.BS != nil:
+		return &dynamodb.AttributeValue{BS: attr.BS}
+	case attr.L != nil:
+		return &dynamodb.AttributeValue{L: convertAttributeValueList(attr.L)}
+	case attr.M != nil:
+		return &dynamodb.AttributeValue{M: convertAttributeValueMap(attr.M)}
+	case attr.N != "":
+		return &dynamodb.AttributeValue{N: &attr.N}
+	case attr.NS != nil:
+		return &dynamodb.AttributeValue{NS: convertToStringPointers(attr.NS)}
+	case attr.NULL:
+		return &dynamodb.AttributeValue{NULL: &attr.NULL}
+	case attr.S != "":
+		return &dynamodb.AttributeValue{S: &attr.S}
+	case attr.SS != nil:
+		return &dynamodb.AttributeValue{SS: convertToStringPointers(attr.SS)}
+	}
+	return nil
 }
 
 func convertAttributeValueList(attrs []*dynamodbstreamsevt.AttributeValue) []*dynamodb.AttributeValue {
-	newAttrs := make([]*dynamodb.AttributeValue, len(attrs))
+	newAttrs := make([]*dynamodb.AttributeValue, 0)
 	for _, attr := range attrs {
-		newAttrs = append(newAttrs, convertAttributeValue(attr))
+		converted := convertAttributeValue(attr)
+		newAttrs = append(newAttrs, converted)
 	}
 	return newAttrs
 }
