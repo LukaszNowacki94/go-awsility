@@ -1,4 +1,4 @@
-package main
+package dynamodb
 
 import (
 	"github.com/eawsy/aws-lambda-go-event/service/lambda/runtime/event/dynamodbstreamsevt"
