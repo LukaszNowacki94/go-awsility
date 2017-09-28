@@ -1,13 +1,13 @@
-package dynamodb
+package main
 
 import (
 	"github.com/eawsy/aws-lambda-go-event/service/lambda/runtime/event/dynamodbstreamsevt"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/guregu/dynamo"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
 func UnmarshalEvent(event map[string]*dynamodbstreamsevt.AttributeValue, item interface{}) error {
-	return dynamo.UnmarshalItem(convert(event), item)
+	return dynamodbattribute.UnmarshalMap(convert(event), item)
 }
 
 func convert(attrs map[string]*dynamodbstreamsevt.AttributeValue) map[string]*dynamodb.AttributeValue {
@@ -22,26 +22,27 @@ func convertAttributeValue(attr *dynamodbstreamsevt.AttributeValue) *dynamodb.At
 	switch {
 	case attr.B != nil:
 		return &dynamodb.AttributeValue{B: attr.B}
-	case attr.BOOL == true || attr.BOOL == false:
-		return &dynamodb.AttributeValue{BOOL: &attr.BOOL}
-	case attr.BS != nil:
+	case len(attr.BS) != 0:
 		return &dynamodb.AttributeValue{BS: attr.BS}
-	case attr.L != nil:
+	case len(attr.L) != 0:
 		return &dynamodb.AttributeValue{L: convertAttributeValueList(attr.L)}
-	case attr.M != nil:
+	case len(attr.M) != 0:
 		return &dynamodb.AttributeValue{M: convertAttributeValueMap(attr.M)}
 	case attr.N != "":
 		return &dynamodb.AttributeValue{N: &attr.N}
-	case attr.NS != nil:
+	case len(attr.NS) != 0:
 		return &dynamodb.AttributeValue{NS: convertToStringPointers(attr.NS)}
-	case attr.NULL:
+	case attr.NULL == true:
 		return &dynamodb.AttributeValue{NULL: &attr.NULL}
 	case attr.S != "":
 		return &dynamodb.AttributeValue{S: &attr.S}
-	case attr.SS != nil:
+	case len(attr.SS) != 0:
 		return &dynamodb.AttributeValue{SS: convertToStringPointers(attr.SS)}
+	case attr.BOOL == true || attr.BOOL == false:
+		return &dynamodb.AttributeValue{BOOL: &attr.BOOL}
+	default:
+		return nil
 	}
-	return nil
 }
 
 func convertAttributeValueList(attrs []*dynamodbstreamsevt.AttributeValue) []*dynamodb.AttributeValue {
