@@ -7,13 +7,21 @@ import (
 )
 
 func UnmarshalEvent(event map[string]*dynamodbstreamsevt.AttributeValue, item interface{}) error {
-	return dynamodbattribute.UnmarshalMap(convert(event), item)
+	return dynamodbattribute.UnmarshalMap(Convert(event), item)
 }
 
-func convert(attrs map[string]*dynamodbstreamsevt.AttributeValue) map[string]*dynamodb.AttributeValue {
+func Convert(attrs map[string]*dynamodbstreamsevt.AttributeValue) map[string]*dynamodb.AttributeValue {
 	parsed := make(map[string]*dynamodb.AttributeValue)
 	for key, value := range attrs {
 		parsed[key] = convertAttributeValue(value)
+	}
+	return parsed
+}
+
+func Unconvert(attrs map[string]*dynamodb.AttributeValue) map[string]*dynamodbstreamsevt.AttributeValue {
+	parsed := make(map[string]*dynamodbstreamsevt.AttributeValue)
+	for key, value := range attrs {
+		parsed[key] = unconvertAttributeValue(value)
 	}
 	return parsed
 }
@@ -45,6 +53,33 @@ func convertAttributeValue(attr *dynamodbstreamsevt.AttributeValue) *dynamodb.At
 	}
 }
 
+func unconvertAttributeValue(attr *dynamodb.AttributeValue) *dynamodbstreamsevt.AttributeValue {
+	switch {
+	case attr.B != nil:
+		return &dynamodbstreamsevt.AttributeValue{B: attr.B}
+	case len(attr.BS) != 0:
+		return &dynamodbstreamsevt.AttributeValue{BS: attr.BS}
+	case len(attr.L) != 0:
+		return &dynamodbstreamsevt.AttributeValue{L: unconvertAttributeValueList(attr.L)}
+	case len(attr.M) != 0:
+		return &dynamodbstreamsevt.AttributeValue{M: unconvertAttributeValueMap(attr.M)}
+	case attr.N != nil:
+		return &dynamodbstreamsevt.AttributeValue{N: *attr.N}
+	case len(attr.NS) != 0:
+		return &dynamodbstreamsevt.AttributeValue{NS: unconvertToStringPointers(attr.NS)}
+	case attr.NULL != nil:
+		return &dynamodbstreamsevt.AttributeValue{NULL: *attr.NULL}
+	case attr.S != nil:
+		return &dynamodbstreamsevt.AttributeValue{S: *attr.S}
+	case len(attr.SS) != 0:
+		return &dynamodbstreamsevt.AttributeValue{SS: unconvertToStringPointers(attr.SS)}
+	case attr.BOOL != nil:
+		return &dynamodbstreamsevt.AttributeValue{BOOL: *attr.BOOL}
+	default:
+		return nil
+	}
+}
+
 func convertAttributeValueList(attrs []*dynamodbstreamsevt.AttributeValue) []*dynamodb.AttributeValue {
 	newAttrs := make([]*dynamodb.AttributeValue, 0)
 	for _, attr := range attrs {
@@ -66,6 +101,31 @@ func convertToStringPointers(strings []string) []*string {
 	newStrings := make([]*string, len(strings))
 	for _, str := range strings {
 		newStrings = append(newStrings, &str)
+	}
+	return newStrings
+}
+
+func unconvertAttributeValueList(attrs []*dynamodb.AttributeValue) []*dynamodbstreamsevt.AttributeValue {
+	newAttrs := make([]*dynamodbstreamsevt.AttributeValue, 0)
+	for _, attr := range attrs {
+		converted := unconvertAttributeValue(attr)
+		newAttrs = append(newAttrs, converted)
+	}
+	return newAttrs
+}
+
+func unconvertAttributeValueMap(attrs map[string]*dynamodb.AttributeValue) map[string]*dynamodbstreamsevt.AttributeValue {
+	newAttrs := make(map[string]*dynamodbstreamsevt.AttributeValue)
+	for key, value := range attrs {
+		newAttrs[key] = unconvertAttributeValue(value)
+	}
+	return newAttrs
+}
+
+func unconvertToStringPointers(strings []*string) []string {
+	newStrings := make([]string, len(strings))
+	for _, str := range strings {
+		newStrings = append(newStrings, *str)
 	}
 	return newStrings
 }
