@@ -30,21 +30,21 @@ func convertAttributeValue(attr *dynamodbstreamsevt.AttributeValue) *dynamodb.At
 	switch {
 	case attr.B != nil:
 		return &dynamodb.AttributeValue{B: attr.B}
-	case len(attr.BS) != 0:
+	case attr.BS != nil:
 		return &dynamodb.AttributeValue{BS: attr.BS}
-	case len(attr.L) != 0:
+	case attr.L != nil:
 		return &dynamodb.AttributeValue{L: convertAttributeValueList(attr.L)}
-	case len(attr.M) != 0:
+	case attr.M != nil:
 		return &dynamodb.AttributeValue{M: convertAttributeValueMap(attr.M)}
 	case attr.N != "":
 		return &dynamodb.AttributeValue{N: &attr.N}
-	case len(attr.NS) != 0:
+	case attr.NS != nil:
 		return &dynamodb.AttributeValue{NS: convertToStringPointers(attr.NS)}
 	case attr.NULL == true:
 		return &dynamodb.AttributeValue{NULL: &attr.NULL}
 	case attr.S != "":
 		return &dynamodb.AttributeValue{S: &attr.S}
-	case len(attr.SS) != 0:
+	case attr.SS != nil:
 		return &dynamodb.AttributeValue{SS: convertToStringPointers(attr.SS)}
 	case attr.BOOL == true || attr.BOOL == false:
 		return &dynamodb.AttributeValue{BOOL: &attr.BOOL}
@@ -57,22 +57,22 @@ func unconvertAttributeValue(attr *dynamodb.AttributeValue) *dynamodbstreamsevt.
 	switch {
 	case attr.B != nil:
 		return &dynamodbstreamsevt.AttributeValue{B: attr.B}
-	case len(attr.BS) != 0:
+	case attr.BS != nil:
 		return &dynamodbstreamsevt.AttributeValue{BS: attr.BS}
-	case len(attr.L) != 0:
+	case attr.L != nil:
 		return &dynamodbstreamsevt.AttributeValue{L: unconvertAttributeValueList(attr.L)}
-	case len(attr.M) != 0:
+	case attr.M != nil:
 		return &dynamodbstreamsevt.AttributeValue{M: unconvertAttributeValueMap(attr.M)}
 	case attr.N != nil:
 		return &dynamodbstreamsevt.AttributeValue{N: *attr.N}
-	case len(attr.NS) != 0:
-		return &dynamodbstreamsevt.AttributeValue{NS: unconvertToStringPointers(attr.NS)}
+	case attr.NS != nil:
+		return &dynamodbstreamsevt.AttributeValue{NS: unconvertFromStringPointers(attr.NS)}
 	case attr.NULL != nil:
 		return &dynamodbstreamsevt.AttributeValue{NULL: *attr.NULL}
 	case attr.S != nil:
 		return &dynamodbstreamsevt.AttributeValue{S: *attr.S}
-	case len(attr.SS) != 0:
-		return &dynamodbstreamsevt.AttributeValue{SS: unconvertToStringPointers(attr.SS)}
+	case attr.SS != nil:
+		return &dynamodbstreamsevt.AttributeValue{SS: unconvertFromStringPointers(attr.SS)}
 	case attr.BOOL != nil:
 		return &dynamodbstreamsevt.AttributeValue{BOOL: *attr.BOOL}
 	default:
@@ -122,7 +122,7 @@ func unconvertAttributeValueMap(attrs map[string]*dynamodb.AttributeValue) map[s
 	return newAttrs
 }
 
-func unconvertToStringPointers(strings []*string) []string {
+func unconvertFromStringPointers(strings []*string) []string {
 	newStrings := make([]string, len(strings))
 	for _, str := range strings {
 		newStrings = append(newStrings, *str)
