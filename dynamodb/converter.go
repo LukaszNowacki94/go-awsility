@@ -6,10 +6,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
+// UnmarshalEvent unmarshal map[string]*dynamodbstreamsevt.AttributeValue to specific interface (struct).
 func UnmarshalEvent(event map[string]*dynamodbstreamsevt.AttributeValue, item interface{}) error {
 	return dynamodbattribute.UnmarshalMap(Convert(event), item)
 }
 
+// Convert converts map[string]*dynamodbstreamsevt.AttributeValue to map[string]*dynamodb.AttributeValue.
 func Convert(attrs map[string]*dynamodbstreamsevt.AttributeValue) map[string]*dynamodb.AttributeValue {
 	parsed := make(map[string]*dynamodb.AttributeValue)
 	for key, value := range attrs {
@@ -18,6 +20,7 @@ func Convert(attrs map[string]*dynamodbstreamsevt.AttributeValue) map[string]*dy
 	return parsed
 }
 
+// Unconvert unconverts map[string]*dynamodb.AttributeValue map[string]*dynamodbstreamsevt.AttributeValue
 func Unconvert(attrs map[string]*dynamodb.AttributeValue) map[string]*dynamodbstreamsevt.AttributeValue {
 	parsed := make(map[string]*dynamodbstreamsevt.AttributeValue)
 	for key, value := range attrs {
@@ -26,6 +29,7 @@ func Unconvert(attrs map[string]*dynamodb.AttributeValue) map[string]*dynamodbst
 	return parsed
 }
 
+// nolint: gocyclo
 func convertAttributeValue(attr *dynamodbstreamsevt.AttributeValue) *dynamodb.AttributeValue {
 	switch {
 	case attr.B != nil:
@@ -40,19 +44,19 @@ func convertAttributeValue(attr *dynamodbstreamsevt.AttributeValue) *dynamodb.At
 		return &dynamodb.AttributeValue{N: &attr.N}
 	case attr.NS != nil:
 		return &dynamodb.AttributeValue{NS: convertToStringPointers(attr.NS)}
-	case attr.NULL == true:
+	case attr.NULL:
 		return &dynamodb.AttributeValue{NULL: &attr.NULL}
 	case attr.S != "":
 		return &dynamodb.AttributeValue{S: &attr.S}
 	case attr.SS != nil:
 		return &dynamodb.AttributeValue{SS: convertToStringPointers(attr.SS)}
-	case attr.BOOL == true || attr.BOOL == false:
+	case true:
 		return &dynamodb.AttributeValue{BOOL: &attr.BOOL}
 	default:
 		return nil
 	}
 }
-
+// nolint: gocyclo
 func unconvertAttributeValue(attr *dynamodb.AttributeValue) *dynamodbstreamsevt.AttributeValue {
 	switch {
 	case attr.B != nil:
