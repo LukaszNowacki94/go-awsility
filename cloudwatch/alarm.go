@@ -3,6 +3,7 @@ package cloudwatch
 import (
 	cw "github.com/aws/aws-sdk-go/service/cloudwatch"
 	"time"
+	"fmt"
 )
 
 // Client structure defines a wraps official AWS Cloudwatch client and provides set of utility methods that operates on cloudwatch alarms.
@@ -12,7 +13,11 @@ type Client struct {
 
 // CloneAndPutMetricAlarm retrieves details of existing alarm and updates it using provided function
 func (alarm *Client) CloneAndPutMetricAlarm(alarmName string, update func(alarm cw.MetricAlarm) cw.MetricAlarm) (cw.PutMetricAlarmOutput, error) {
-	alarmDetails := alarm.getAlarm(alarmName)
+	var output *cw.PutMetricAlarmOutput
+	alarmDetails, alarmErr := alarm.GetAlarm(alarmName)
+	if alarmErr != nil {
+		return *output, alarmErr
+	}
 	updatedAlarm := update(alarmDetails)
 	input := &cw.PutMetricAlarmInput{
 		ActionsEnabled:                   updatedAlarm.ActionsEnabled,
@@ -34,8 +39,8 @@ func (alarm *Client) CloneAndPutMetricAlarm(alarmName string, update func(alarm 
 		TreatMissingData:                 updatedAlarm.TreatMissingData,
 		Unit:                             updatedAlarm.Unit,
 	}
-	res, err := alarm.Cloudwatch.PutMetricAlarm(input)
-	return *res, err
+	output, err := alarm.Cloudwatch.PutMetricAlarm(input)
+	return *output, err
 }
 
 // PutMetric sends dimension metric data to cloudwatch
@@ -84,17 +89,21 @@ func (alarm *Client) GetLast5MinMetrics(namespace string, metricName string, dim
 // SetAlarmToOk set alarm state to status OK
 func (alarm *Client) SetAlarmToOk(alarmName string) (cw.SetAlarmStateOutput, error) {
 	reason := "handled"
-	stateOk := "Ok"
+	stateOk := "OK"
 	req := &cw.SetAlarmStateInput{AlarmName: &alarmName, StateReason: &reason, StateValue: &stateOk}
 	res, err := alarm.Cloudwatch.SetAlarmState(req)
 	return *res, err
 }
 
-func (alarm *Client) getAlarm(alarmName string) cw.MetricAlarm {
+func (alarm *Client) GetAlarm(alarmName string) (metricAlarm cw.MetricAlarm, err error) {
+
 	alarms := []*string{&alarmName}
 	maxRecords := int64(1)
 	req := cw.DescribeAlarmsInput{AlarmNames: alarms, MaxRecords: &maxRecords}
 	res, _ := alarm.Cloudwatch.DescribeAlarms(&req)
-	metricAlarm := *res.MetricAlarms[0]
-	return metricAlarm
+	if len(res.MetricAlarms) > 0 {
+		metricAlarm = *res.MetricAlarms[0]
+		return metricAlarm, nil
+	}
+	return metricAlarm, fmt.Errorf("MetricAlarms are empty")
 }
