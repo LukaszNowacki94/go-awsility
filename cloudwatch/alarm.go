@@ -14,7 +14,7 @@ type Client struct {
 // CloneAndPutMetricAlarm retrieves details of existing alarm and updates it using provided function
 func (alarm *Client) CloneAndPutMetricAlarm(alarmName string, update func(alarm cw.MetricAlarm) cw.MetricAlarm) (cw.PutMetricAlarmOutput, error) {
 	var output *cw.PutMetricAlarmOutput
-	alarmDetails, alarmErr := alarm.GetAlarm(alarmName)
+	alarmDetails, alarmErr := alarm.getAlarm(alarmName)
 	if alarmErr != nil {
 		return *output, alarmErr
 	}
@@ -95,7 +95,7 @@ func (alarm *Client) SetAlarmToOk(alarmName string) (cw.SetAlarmStateOutput, err
 	return *res, err
 }
 
-func (alarm *Client) GetAlarm(alarmName string) (metricAlarm cw.MetricAlarm, err error) {
+func (alarm *Client) getAlarm(alarmName string) (metricAlarm cw.MetricAlarm, err error) {
 
 	alarms := []*string{&alarmName}
 	maxRecords := int64(1)
