@@ -10,12 +10,11 @@ import (
 
 func main() {
 	s, _ := session.NewSession(aws.NewConfig().WithRegion("eu-west-1"))
-	awsClient := cw.New(s)
-	metricAlarm := cloudwatch.Client{Cloudwatch: awsClient}
-	sum, err := metricAlarm.GetLast5MinMetrics("AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName",
-		"FR-OTA-OPR-AVAILABILITIES-PROD", 60)
-	if err != nil {
-		log.Println(err)
+	cl := &cloudwatch.Client{Cloudwatch: cw.New(s)}
+	res, _ := cl.GetLastNMinMetrics(300, "AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "OTA-TEST", 60)
+	for _, i := range res {
+		log.Println(i)
 	}
-	log.Println(sum)
+	//r, _ := cl.getAlarmByPrefix("FR-OTA-OPR-AVAILABILITIES-WRITE-SCALE-DOWN")
+	//fmt.Println(r)
 }
