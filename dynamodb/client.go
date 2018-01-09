@@ -60,3 +60,9 @@ func (client *Client) UpdateProvision(read int64, write int64) error {
 	_, err := db.Table(client.TableName).UpdateTable().Provision(read, write).Run()
 	return err
 }
+
+// UpdateProvision sets read and write provisioning throughput for a given table
+func (client *Client) DescribeTable() (dynamo.Description, error) {
+	db := client.Db
+	return db.Table(client.TableName).Describe().Run()
+}
