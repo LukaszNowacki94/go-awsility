@@ -54,6 +54,12 @@ func (client *Client) ScanAll(hashKey *Key, out interface{}) error {
 	return err
 }
 
+func (client *Client) GetAll(hashKey *Key, out interface{}) error {
+	db := client.Db
+	err := db.Table(client.TableName).Get(hashKey.Name, hashKey.Value).All(out)
+	return err
+}
+
 // UpdateProvision sets read and write provisioning throughput for a given table
 func (client *Client) UpdateProvision(read int64, write int64) error {
 	db := client.Db
