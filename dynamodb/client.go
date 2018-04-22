@@ -24,6 +24,11 @@ type SetExpression struct {
 	Args       []interface{}
 }
 
+type SetCondition struct {
+	Condition  string
+	Args []interface{}
+}
+
 // BatchWrite is a function which allows for writing items in Batch. DynamoDB provides an ability to save
 // documents in batch. Such approach reduces cost of using DynamoDB service and increases performance.
 // Please read http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
@@ -41,6 +46,19 @@ func (client *Client) Update(hashKey *Key, rangeKey *Key, expr *SetExpression) e
 		Update(hashKey.Name, hashKey.Value).
 		Range(rangeKey.Name, rangeKey.Value).
 		SetExpr(expr.Expression, expr.Args...).
+		Run()
+	return err
+}
+
+// UpdateUnderCond is function which allows for updating items under certain condition:
+// http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html
+func (client *Client) UpdateUnderCond(hashKey *Key, rangeKey *Key, expr *SetExpression, cond *SetCondition) error {
+	db := client.Db
+	err := db.Table(client.TableName).
+		Update(hashKey.Name, hashKey.Value).
+		Range(rangeKey.Name, rangeKey.Value).
+		SetExpr(expr.Expression, expr.Args...).
+		If(cond.Condition, cond.Args...).
 		Run()
 	return err
 }
