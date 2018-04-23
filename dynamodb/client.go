@@ -50,9 +50,9 @@ func (client *Client) Update(hashKey *Key, rangeKey *Key, expr *SetExpression) e
 	return err
 }
 
-// UpdateUnderCond is function which allows for updating items under certain condition:
+// UpdateConditionally is function which allows for updating items under certain condition:
 // http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html
-func (client *Client) UpdateUnderCond(hashKey *Key, rangeKey *Key, expr *SetExpression, cond *SetCondition) error {
+func (client *Client) UpdateConditionally(hashKey *Key, rangeKey *Key, expr *SetExpression, cond *SetCondition) error {
 	db := client.Db
 	err := db.Table(client.TableName).
 		Update(hashKey.Name, hashKey.Value).
