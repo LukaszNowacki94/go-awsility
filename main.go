@@ -9,9 +9,15 @@ import (
 )
 
 func main() {
-	s, _ := session.NewSession(aws.NewConfig().WithRegion("eu-west-1"))
+	s, err := session.NewSession(aws.NewConfig().WithRegion("eu-west-1"))
+	if err != nil {
+		panic(err)
+	}
 	cl := &cloudwatch.Client{Cloudwatch: cw.New(s)}
-	res, _ := cl.GetLastNMinMetrics(300, "AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "OTA-TEST", 60)
+	res, err := cl.GetLastNMinMetrics(300, "AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "OTA-TEST", 60)
+	if err != nil {
+		panic(err)
+	}
 	for _, i := range res {
 		log.Println(i)
 	}

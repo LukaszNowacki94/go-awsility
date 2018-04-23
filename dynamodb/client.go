@@ -23,7 +23,7 @@ type SetExpression struct {
 	Expression string
 	Args       []interface{}
 }
-
+// SetCondition is a structure which holds an condition expression and set of arguments.
 type SetCondition struct {
 	Condition  string
 	Args []interface{}
@@ -71,7 +71,7 @@ func (client *Client) ScanAll(hashKey *Key, out interface{}) error {
 	err := db.Table(client.TableName).Scan().Filter(filterExpr, hashKey.Value).All(out)
 	return err
 }
-
+// GetAll is a function which allows for retrieving all items:
 func (client *Client) GetAll(hashKey *Key, out interface{}) error {
 	db := client.Db
 	err := db.Table(client.TableName).Get(hashKey.Name, hashKey.Value).All(out)
@@ -85,7 +85,8 @@ func (client *Client) UpdateProvision(read int64, write int64) error {
 	return err
 }
 
-// UpdateProvision sets read and write provisioning throughput for a given table
+// DescribeTable sets read and write provisioning throughput for a given table
+// https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeTable.html
 func (client *Client) DescribeTable() (dynamo.Description, error) {
 	db := client.Db
 	return db.Table(client.TableName).Describe().Run()

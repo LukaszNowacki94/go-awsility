@@ -114,7 +114,10 @@ func (client *Client) getAlarm(alarmName string) (metricAlarm cw.MetricAlarm, er
 	alarms := []*string{&alarmName}
 	maxRecords := int64(1)
 	req := cw.DescribeAlarmsInput{AlarmNames: alarms, MaxRecords: &maxRecords}
-	res, _ := client.Cloudwatch.DescribeAlarms(&req)
+	res, err := client.Cloudwatch.DescribeAlarms(&req)
+	if err != nil {
+		return cw.MetricAlarm{}, nil
+	}
 	if len(res.MetricAlarms) > 0 {
 		metricAlarm = *res.MetricAlarms[0]
 		return metricAlarm, nil
@@ -126,7 +129,11 @@ func (client *Client) getAlarmByPrefix(alarmNamePrefix string) (metricAlarm cw.M
 
 	maxRecords := int64(1)
 	req := cw.DescribeAlarmsInput{AlarmNamePrefix: &alarmNamePrefix, MaxRecords: &maxRecords}
-	res, _ := client.Cloudwatch.DescribeAlarms(&req)
+	res, err := client.Cloudwatch.DescribeAlarms(&req)
+	if err != nil {
+		return cw.MetricAlarm{}, nil
+	}
+
 	if len(res.MetricAlarms) > 0 {
 		metricAlarm = *res.MetricAlarms[0]
 		return metricAlarm, nil
